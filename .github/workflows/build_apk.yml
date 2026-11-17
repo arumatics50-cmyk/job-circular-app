@@ -23,15 +23,39 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Ensure Root Structure
+      - name: Prepare Workspace & Project Files
         run: |
-          if [ -d "job-circular-app" ] && [ ! -f "pubspec.yaml" ]; then
+          # If uploaded inside subfolder job-circular-app, copy everything to root
+          if [ -d "job-circular-app" ]; then
             echo "Moving files from subfolder..."
-            cp -r job-circular-app/* .
+            cp -rf job-circular-app/* . || true
           fi
 
-      - name: Auto-fix Image Viewer
-        run: |
+          # Clean pubspec.yaml
+          cat << 'EOF' > pubspec.yaml
+          name: job_circular_app
+          description: "Bangladesh Job Circular App"
+          publish_to: 'none'
+          version: 1.0.0+1
+
+          environment:
+            sdk: '>=3.0.0 <4.0.0'
+
+          dependencies:
+            flutter:
+              sdk: flutter
+            cupertino_icons: ^1.0.8
+            google_fonts: ^6.2.1
+            intl: ^0.19.0
+            url_launcher: ^6.3.0
+            share_plus: ^10.0.0
+            shared_preferences: ^2.3.0
+
+          flutter:
+            uses-material-design: true
+          EOF
+
+          # Replace image_viewer_screen with native InteractiveViewer
           mkdir -p lib/screens
           cat << 'EOF' > lib/screens/image_viewer_screen.dart
           import 'package:flutter/material.dart';
@@ -75,34 +99,9 @@ jobs:
           }
           EOF
 
-      - name: Auto-fix pubspec.yaml
+      - name: Generate Android Platform
         run: |
-          cat << 'EOF' > pubspec.yaml
-          name: job_circular_app
-          description: "Bangladesh Job Circular App"
-          publish_to: 'none'
-          version: 1.0.0+1
-
-          environment:
-            sdk: '>=3.0.0 <4.0.0'
-
-          dependencies:
-            flutter:
-              sdk: flutter
-            cupertino_icons: ^1.0.8
-            google_fonts: ^6.2.1
-            intl: ^0.19.0
-            url_launcher: ^6.3.0
-            share_plus: ^10.0.0
-            shared_preferences: ^2.3.0
-
-          flutter:
-            uses-material-design: true
-          EOF
-
-      - name: Generate Android Project
-        run: |
-          flutter create . --platforms=android --org com.jobcircular.app
+          flutter create --project-name job_circular_app --platforms=android .
           chmod +x android/gradlew || true
 
       - name: Install Dependencies
@@ -112,7 +111,7 @@ jobs:
         run: |
           flutter build apk --debug
 
-      - name: Upload APK
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: job-circular-app-apk
