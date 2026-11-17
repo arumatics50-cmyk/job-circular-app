@@ -36,19 +36,14 @@ jobs:
           flutter create . --platforms=android --org com.jobcircular.app
           chmod +x android/gradlew || true
 
-      - name: Enforce Min Android SDK 21
-        run: |
-          sed -i 's/minSdkVersion = flutter.minSdkVersion/minSdkVersion = 21/g' android/app/build.gradle || true
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 21/g' android/app/build.gradle || true
-
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Build Release APK
-        run: flutter build apk --release --no-tree-shake-icons
+      - name: Build Android APK
+        run: flutter build apk --debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: job-circular-app-release
-          path: build/app/outputs/**/app-*.apk
+          name: job-circular-app-apk
+          path: build/app/outputs/flutter-apk/*.apk
