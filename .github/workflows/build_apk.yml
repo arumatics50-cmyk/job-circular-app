@@ -1,0 +1,67 @@
+আপনি GitHub-এ **"Add file" ➔ "Create new file"** অপশনে ক্লিক করেছেন, তাই GitHub নতুন ফাইলের নাম জানতে চাইছে। 
+
+আপনি কী করতে চাচ্ছেন তার ওপর নির্ভর করে নিচে দেখুন:
+
+---
+
+### 👉 অপশন ১: আপনি যদি সম্পূর্ণ প্রজেক্ট আপলোড করতে চান (রিকমেন্ডেড)
+
+এখানে কোনো নাম লেখার প্রয়োজন নেই! কারণ আপনি তো ফাইল নতুন করে লিখবেন না, পিসি থেকে আপলোড করবেন।
+1. পেজের উপরে **"Add file"** ড্রপডাউনে ক্লিক করে **"Upload files"** অপশনটি সিলেক্ট করুন।
+2. এবার আপনার পিসির [**`job-circular-app`**](file:///C:/Users/GOLPO/.gemini/antigravity/scratch/job-circular-app) ফোল্ডারের ফাইলগুলো মাউস দিয়ে টেনে এনে ব্রাউজারে ছেড়ে দিন (Drag & Drop করুন)।
+3. নিচে সবুজ রঙের **"Commit changes"** বাটনে ক্লিক করুন।
+
+---
+
+### 👉 অপশন ২: আপনি যদি APK তৈরির বিল্ডার ফাইলটি বানাতে চান
+
+যদি আপনি APK তৈরির জন্য ফাইলটি নিজে তৈরি করতে চান, তবে ওই বক্সে হুবহু এই নামটি লিখুন:
+
+```text
+.github/workflows/build_apk.yml
+```
+*(টিপস: বক্সে `.github/` লেখার সাথে সাথেই এটি নিজে থেকেই ফোল্ডার তৈরি করে নিবে, তারপর `workflows/` লিখে এন্টার দিলেই পুরো পাথ হয়ে যাবে।)*
+
+এরপর নিচের বড় খালি কোড বক্সে নিচের সম্পূর্ণ কোডটি কপি করে পেস্ট করে দিন:
+
+```yaml
+name: Build Flutter APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+
+      - name: Generate Android Platform Files
+        run: flutter create . --platforms=android
+
+      - name: Get Dependencies
+        run: flutter pub get
+
+      - name: Build Android APK
+        run: flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: job-circular-app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
